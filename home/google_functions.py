@@ -80,7 +80,8 @@ def upload_file(request,existing_file, new_user_file, uploaded_file):
             file_upload = drive_service.CreateFile({'title':uploaded_file_name, #'mimeType':uploaded_file.content_type,
                 "parents": [{"kind": "drive#fileLink","id": folder['id']}]})
             print file_drive
-            file_upload.SetContentString(file_drive.read())
+            # file_upload.SetContentString(file_drive.read())
+            file_upload.SetContentString(file_drive.read().decode(sys.getdefaultencoding()).encode('utf-8'))
             file_upload.Upload() # Files.insert()
             file_chunk = UserFileChunks(file_id = new_user_file, identifier=file_upload['id'], name = file_upload['title'], service="gdrive")
             file_chunk.save()
@@ -89,7 +90,9 @@ def upload_file(request,existing_file, new_user_file, uploaded_file):
             existing_chunk = existing_file.chunks.get(service="gdrive")
             file_upload = drive_service.CreateFile({'id': existing_chunk.identifier})
 
-            file_upload.SetContentString(file_drive.read())
+            # file_upload.SetContentString(file_drive.read())
+            file_upload.SetContentString(file_drive.read().decode(sys.getdefaultencoding()).encode('utf-8'))
+
             # file_upload.SetContentString(unicode(file_drive.read(), 'utf-8'))
             file_upload.Upload() # Files.insert()
             existing_chunk.identifier = file_upload['id']

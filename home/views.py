@@ -21,17 +21,11 @@ from filehandler.models import UserFile, UserFileForm, UserFileChunks
 import cStringIO, os, random, re, sys
 import zfec
 import cnox
-
+import codecs
 
 key = b'\xbf\xc0\x85)\x10nc\x94\x02)j\xdf\xcb\xc4\x94\x9d(\x9e[EX\xc8\xd5\xbfI{\xa2$\x05(\xd5\x18'
 #Box modules
 from boxsdk import OAuth2
-
-# from google API console - convert private key to base64 or load from file
-# id = "303238530248-g2sshp334fkmq3htovp6a0sps9p4tgmd@developer.gserviceaccount.com"
-# key = 'mfyXhE4v_0lEConh4FcAJUjW'
-
-
 
 client_id = "813087485002-lkn4dilg4355de3qu8g62ml3f2pe0pr1.apps.googleusercontent.com"
 client_secret = "3d-QjtT9T-t0rb1FJ3_oAptu"
@@ -201,12 +195,9 @@ def upload_files(request):
             uploaded_file_name = uploaded_file.name
 
             to_upload = "zfec_chunks/" + encrypted_file + "_chunk"
-            # chunks.append(open(to_upload+".0_3.fec.enc",'rb'))
-            # chunks.append(open(to_upload+".1_3.fec.enc",'rb'))
-            # chunks.append(open(to_upload+".2_3.fec.enc",'rb'))
             chunks.append(open(to_upload+".0_3.fec",'rb'))
             chunks.append(open(to_upload+".1_3.fec",'rb'))
-            chunks.append(open(to_upload+".2_3.fec",'rb'))
+            chunks.append(codecs.open(to_upload+".2_3.fec",'rb','utf-8'))
 
             new_user_file = None
 
@@ -236,34 +227,6 @@ def upload_files(request):
 
 
 def make_chunks(uploaded_file):
-
-    # PREFIX = uploaded_file.name + "_chunk"
-    # SUFFIX = ".fec"
-    # VERBOSE=False
-    #
-    # tempdir = 'zfec_chunks'
-    # if not os.path.exists(tempdir):
-    #     os.makedirs(tempdir)
-    # try:
-    #     tempf = file(os.path.join(tempdir, uploaded_file.name), 'w+b')
-    #     fsize = len(uploaded_file.file.read())
-    #     uploaded_file.file.seek(0)
-    #     tempf.write(uploaded_file.file.read())
-    #     tempf.flush()
-    #     tempf.seek(0)
-    #     k = 2
-    #     m = 3
-    #     # encode the file
-    #     chunks = zfec.filefec.encode_to_files(tempf, fsize, tempdir, PREFIX, k, m, SUFFIX, verbose=VERBOSE)
-    #     print chunks.__class__
-    #     print "\n" + str(len(chunks))
-    #     # print len(chunks[0])
-    #     print "------------------"
-    #     # print chunks
-    #     print chunks[0]
-    # finally:
-    #     print "done encoding"
-    #
     PREFIX = uploaded_file + "_chunk"
     SUFFIX = ".fec"
     VERBOSE=False
@@ -273,22 +236,12 @@ def make_chunks(uploaded_file):
         os.makedirs(tempdir)
     try:
         tempf = open(os.path.join(tempdir, uploaded_file), 'rb')
-        # tempf = file(os.path.join(tempdir, uploaded_file), 'w+b')
         fsize = len(tempf.read())
-        # uploaded_file.file.seek(0)
-        # tempf.write(uploaded_file.file.read())
         tempf.flush()
         tempf.seek(0)
         k = 2
         m = 3
-        # encode the file
         zfec.filefec.encode_to_files(tempf, fsize, tempdir, PREFIX, k, m, SUFFIX, verbose=VERBOSE)
-        # print chunks.__class__
-        # print "\n" + str(len(chunks))
-        # # print len(chunks[0])
-        # print "------------------"
-        # # print chunks
-        # print chunks[0]
     finally:
         print "done encoding"
 
@@ -303,13 +256,10 @@ def join_chunks(file_name):
     # select some share files
     RE=re.compile(zfec.filefec.RE_FORMAT % (PREFIX, SUFFIX,))
     fns = os.listdir(tempdir)
-    # print fns
-            # assert len(fns) >= m, (fns, tempdir, tempdir,)
-    # sharefs = [ open(os.path.join(tempdir, fn), "rb") for fn in fns if RE.match(fn) ]
     sharefs = [open(os.path.join(tempdir, fn),"rb") for fn in fns]
-    # random.shuffle(sharefs)
+
     print sharefs
-    # del sharefs[numshs:]
+
 
     download_dir = 'Downloads'
     if not os.path.exists(download_dir):
@@ -323,7 +273,7 @@ def join_chunks(file_name):
     outf.flush()
     outf.seek(0)
 
-    # filelist = [ f for f in os.listdir("Downloads")]
+
 
     for f in sharefs:
         # if re.match("*fec", f):
@@ -343,44 +293,11 @@ def encrypt_files(key, uploaded_file):
     tempf.seek(0)
 
     to_upload = "zfec_chunks/" + uploaded_file.name
-    # file1 = open(to_upload,'rb')
-    # file2 = open(to_upload+".1_3.fec",'rb')
-    # file3 = open(to_upload+".2_3.fec",'rb')
-
 
     cnox.Encrypt(in_file=to_upload, key=key)
 
-    # plaintext = file1.read()
-    # enc = encrypt(plaintext, key)
-    #
-    #
-    # with open(to_upload + ".enc", 'wb') as fo:
-    #     fo.write(enc)
-
-    # os.remove(to_upload)
     encrypted_file = uploaded_file.name + ".nox"
     return encrypted_file
-    # plaintext = file2.read()
-    # enc = encrypt(plaintext, key)
-
-    # file_name =to_upload+".1_3.fec"
-    # with open(file_name + ".enc", 'wb') as fo:
-    #     fo.write(enc)
-    #
-    # plaintext = file3.read()
-    # enc = encrypt(plaintext, key)
-    #
-    # file_name =to_upload+".2_3.fec"
-    # with open(file_name + ".enc", 'wb') as fo:
-    #     fo.write(enc)
-
-
-    # with open(file_name, 'rb') as fo:
-    #     plaintext = fo.read()
-    # enc = encrypt(plaintext, key)
-
-    # name = file_name + ".enc"
-    # return name
 
 def decrypt(ciphertext, key):
     iv = ciphertext[:AES.block_size]
@@ -390,44 +307,13 @@ def decrypt(ciphertext, key):
 
 
 def decrypt_files(file_name):
-    # PREFIX = file_name + ".enc"
-    # SUFFIX = ".fec.enc"
-    #
-    # tempdir = 'Downloads'
-    # # select some share files
-    # RE=re.compile(zfec.filefec.RE_FORMAT % (PREFIX, SUFFIX,))
-    #
-    # fns = os.listdir(tempdir)
-    #
-    #         # assert len(fns) >= m, (fns, tempdir, tempdir,)
-    # sharefs = [ os.path.join(tempdir, fn) for fn in fns if RE.match(fn) ]
-    # print sharefs
-    # for f in sharefs:
     f = file_name + ".nox"
     tempdir = 'Downloads'
 
     file_path = os.path.join(tempdir, f)
     cnox.Decrypt(in_file=file_path,key=key)
-    # fo = open(os.path.join(tempdir, f), 'rb')
-    # ciphertext = fo.read()
-    # dec = decrypt(ciphertext, key)
-    # with open(os.path.join(tempdir, f[:-4]), 'wb') as fo:
-    #     fo.write(dec)
 
     os.remove(os.path.join(tempdir, f))
-    # for f in sharefs:
-    #     # if re.match("*fec", f):
-    #     os.remove(f)
-
-    # with open(file_name, 'rb') as fo:
-    #     ciphertext = fo.read()
-    #
-    # dec = decrypt(ciphertext, key)
-    #
-    # #with open(file_name[:-4], 'wb') as fo:
-    # with open(file_name[:-4], 'wb') as fo:
-    #     fo.write(dec)
-
 
 def pad(s):
     return s + b"\0" * (AES.block_size - len(s) % AES.block_size)
@@ -437,15 +323,3 @@ def encrypt(message, key, key_size=256):
     iv = Random.new().read(AES.block_size)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return iv + cipher.encrypt(message)
-
-# def upload_to_blobstore(to_upload):
-#     upload_files = blobstore_handlers.BlobstoreUploadHandler.get_uploads('file')
-#     blob_info = upload_files[0]
-#     blobstore_handlers.BlobstoreUploadHandler.redirect('/home')
-#
-# def download_from_blobstore():
-#     for b in blobstore.BlobInfo.all():
-#         if not blobstore.get(b.key()):
-#             blobstore_handlers.BlobstoreDownloadHandler.error(404)
-#         else:
-#             blobstore_handlers.BlobstoreDownloadHandler.send_blob(blobstore.BlobInfo.get(b.key()), save_as=True)
