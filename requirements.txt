@@ -16,7 +16,7 @@ dropbox==2.2.0
 enum==0.4.4
 enum34==1.0.4
 google-api-python-client==1.4.1
-gunicorn==19.3.0
+gunicorn>=19.5.0
 httplib2==0.9.1
 jsonfield==1.0.3
 crypto==1.4.1
