@@ -23,7 +23,7 @@ crypto==1.4.1
 cryptography==0.9
 jwt==0.3.2
 MySQL-python==1.2.5
-numpy==1.9.2
+numpy==1.21.0
 oauth2client==1.4.12
 oauthlib==0.7.2
 pyasn1==0.1.8
